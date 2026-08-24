@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reservar - AeroRuta</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="index.html" class="logo">AeroRuta</a>
+        <ul class="nav-links">
+            <li><a href="index.html">Inicio</a></li>
+            <li><a href="cliente.html">Mi Cuenta</a></li>
+        </ul>
+    </nav>
+
+    <div class="container" style="margin-top:2rem">
+        <div class="card" id="step-1">
+            <h2 style="margin-bottom:1rem">Selecciona tus asientos</h2>
+            <div id="info-servicio" style="margin-bottom:1.5rem"></div>
+            <div class="seat-map" id="seat-map"></div>
+            <div style="text-align:center;margin-top:1.5rem">
+                <button class="btn btn-primary" onclick="siguientePaso()">Continuar →</button>
+            </div>
+        </div>
+
+        <div class="card" id="step-2" style="display:none">
+            <h2 style="margin-bottom:1rem">Datos de los pasajeros</h2>
+            <div id="form-pasajeros"></div>
+            <div style="display:flex;gap:1rem;justify-content:center;margin-top:1.5rem">
+                <button class="btn btn-outline" onclick="anteriorPaso()">← Atrás</button>
+                <button class="btn btn-primary" onclick="siguientePaso2()">Continuar →</button>
+            </div>
+        </div>
+
+        <div class="card" id="step-3" style="display:none">
+            <h2 style="margin-bottom:1rem">Resumen de la reserva</h2>
+            <div id="resumen-reserva"></div>
+            <div style="display:flex;gap:1rem;justify-content:center;margin-top:1.5rem">
+                <button class="btn btn-outline" onclick="anteriorPaso2()">← Atrás</button>
+                <button class="btn btn-success" onclick="confirmarReserva()">✓ Confirmar Reserva</button>
+            </div>
+        </div>
+
+        <div class="card" id="step-4" style="display:none;text-align:center">
+            <div style="font-size:4rem;margin-bottom:1rem">🎉</div>
+            <h2>¡Reserva confirmada!</h2>
+            <p style="margin:1rem 0">Tu código de reserva es:</p>
+            <h1 id="codigo-final" style="color:var(--primary);letter-spacing:2px"></h1>
+            <p style="margin-top:1rem"><a href="cliente.html" class="btn btn-primary">Ver mis reservas</a></p>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const idServicio = urlParams.get('servicio');
+        const cantidad = parseInt(urlParams.get('pasajeros')) || 1;
+        let servicioData = null;
+        let asientosSeleccionados = [];
+
+        async function cargarServicio() {
+            const res = await fetch(`${API_URL}/servicios/${idServicio}`);
+            servicioData = await res.json();
+            document.getElementById('info-servicio').innerHTML = `
+                <strong>${servicioData.origen_ciudad} → ${servicioData.destino_ciudad}</strong><br>
+                <span style="color:var(--gray)">${servicioData.fecha.split('T')[0]} | ${servicioData.hora_salida} - ${servicioData.hora_llegada}</span>
+            `;
+
+            const map = document.getElementById('seat-map');
+            map.innerHTML = servicioData.asientos.map(a => `
+                <div class="seat ${a.estado} ${asientosSeleccionados.includes(a.id_asiento) ? 'seleccionado' : ''}" 
+                     onclick="toggleAsiento(${a.id_asiento}, '${a.estado}')">
+                    ${a.numero}
+                </div>
+            `).join('');
+        }
+
+        function toggleAsiento(id, estado) {
+            if(estado === 'ocupado') return;
+            if(asientosSeleccionados.includes(id)) {
+                asientosSeleccionados = asientosSeleccionados.filter(x => x !== id);
+            } else {
+                if(asientosSeleccionados.length >= cantidad) {
+                    alert(`Solo puedes seleccionar ${cantidad} asiento(s)`);
+                    return;
+                }
+                asientosSeleccionados.push(id);
+            }
+            cargarServicio();
+        }
+
+        function siguientePaso() {
+            if(asientosSeleccionados.length !== cantidad) {
+                alert(`Debes seleccionar exactamente ${cantidad} asiento(s)`);
+                return;
+            }
+            document.getElementById('step-1').style.display = 'none';
+            document.getElementById('step-2').style.display = 'block';
+
+            let html = '';
+            for(let i=0; i<cantidad; i++) {
+                html += `
+                    <div style="border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
+                        <h4>Pasajero ${i+1} (Asiento ${servicioData.asientos.find(a=>a.id_asiento==asientosSeleccionados[i]).numero})</h4>
+                        <div class="grid-2">
+                            <div class="form-group"><label class="form-label">Nombre</label><input type="text" class="form-control" id="p-nombre-${i}"></div>
+                            <div class="form-group"><label class="form-label">Apellido</label><input type="text" class="form-control" id="p-apellido-${i}"></div>
+                        </div>
+                        <div class="form-group"><label class="form-label">Documento</label><input type="text" class="form-control" id="p-doc-${i}"></div>
+                        <div class="form-group"><label class="form-label">Fecha de nacimiento</label><input type="date" class="form-control" id="p-fecha-${i}"></div>
+                        <div class="form-group"><label class="form-label">Teléfono</label><input type="tel" class="form-control" id="p-tel-${i}"></div>
+                    </div>
+                `;
+            }
+            document.getElementById('form-pasajeros').innerHTML = html;
+        }
+
+        function anteriorPaso() {
+            document.getElementById('step-2').style.display = 'none';
+            document.getElementById('step-1').style.display = 'block';
+        }
+
+        function siguientePaso2() {
+            const pasajeros = [];
+            for(let i=0; i<cantidad; i++) {
+                pasajeros.push({
+                    nombre: document.getElementById(`p-nombre-${i}`).value,
+                    apellido: document.getElementById(`p-apellido-${i}`).value,
+                    documento: document.getElementById(`p-doc-${i}`).value,
+                    fecha_nacimiento: document.getElementById(`p-fecha-${i}`).value,
+                    telefono: document.getElementById(`p-tel-${i}`).value
+                });
+            }
+            window.pasajerosData = pasajeros;
+
+            const total = servicioData.precio * cantidad;
+            document.getElementById('resumen-reserva').innerHTML = `
+                <div class="comprobante">
+                    <div class="comprobante-row"><span class="comprobante-label">Ruta:</span><span class="comprobante-value">${servicioData.origen_ciudad} → ${servicioData.destino_ciudad}</span></div>
+                    <div class="comprobante-row"><span class="comprobante-label">Fecha:</span><span class="comprobante-value">${servicioData.fecha.split('T')[0]}</span></div>
+                    <div class="comprobante-row"><span class="comprobante-label">Horario:</span><span class="comprobante-value">${servicioData.hora_salida} - ${servicioData.hora_llegada}</span></div>
+                    <div class="comprobante-row"><span class="comprobante-label">Pasajeros:</span><span class="comprobante-value">${cantidad}</span></div>
+                    <div class="comprobante-row"><span class="comprobante-label">Asientos:</span><span class="comprobante-value">${asientosSeleccionados.map(id => servicioData.asientos.find(a=>a.id_asiento==id).numero).join(', ')}</span></div>
+                    <div class="comprobante-total"><span>TOTAL</span><span>$${parseFloat(total).toLocaleString()}</span></div>
+                </div>
+            `;
+            document.getElementById('step-2').style.display = 'none';
+            document.getElementById('step-3').style.display = 'block';
+        }
+
+        function anteriorPaso2() {
+            document.getElementById('step-3').style.display = 'none';
+            document.getElementById('step-2').style.display = 'block';
+        }
+
+        async function confirmarReserva() {
+            if(!token) { alert('Debes iniciar sesión'); location.href='login.html'; return; }
+            const res = await fetch(`${API_URL}/reservas`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify({
+                    id_servicio: parseInt(idServicio),
+                    cantidad_pasajeros: cantidad,
+                    pasajeros: window.pasajerosData,
+                    asientos_seleccionados: asientosSeleccionados
+                })
+            });
+            const data = await res.json();
+            if(res.ok) {
+                document.getElementById('step-3').style.display = 'none';
+                document.getElementById('step-4').style.display = 'block';
+                document.getElementById('codigo-final').textContent = data.codigo_reserva;
+            } else {
+                alert(data.mensaje || 'Error al crear reserva');
+            }
+        }
+
+        cargarServicio();
+    </script>
+</body>
+</html>

@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Administrativo - AeroRuta</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-brand">✈️ AeroRuta</div>
+        <ul class="sidebar-menu">
+            <li><a href="#" class="active" onclick="mostrarSeccion('dashboard')">📊 Dashboard</a></li>
+            <li><a href="#" onclick="mostrarSeccion('usuarios')">👥 Usuarios</a></li>
+            <li><a href="#" onclick="mostrarSeccion('rutas')">🛤️ Rutas</a></li>
+            <li><a href="#" onclick="mostrarSeccion('servicios')">🚌 Servicios</a></li>
+            <li><a href="#" onclick="mostrarSeccion('reservas')">🎫 Reservas</a></li>
+            <li><a href="#" onclick="mostrarSeccion('destinos')">🌍 Destinos</a></li>
+            <li><a href="#" onclick="logout()">🚪 Cerrar Sesión</a></li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div id="seccion-dashboard">
+            <h1 style="margin-bottom:1.5rem">Dashboard</h1>
+            <div class="grid-4" id="stats-container"></div>
+            <div class="grid-2" style="margin-top:2rem">
+                <div class="card">
+                    <h3 style="margin-bottom:1rem">Reservas por Mes</h3>
+                    <div id="chart-reservas">Datos cargando...</div>
+                </div>
+                <div class="card">
+                    <h3 style="margin-bottom:1rem">Destinos más solicitados</h3>
+                    <div id="chart-destinos">Datos cargando...</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="seccion-usuarios" style="display:none">
+            <div class="card-header">
+                <h1 class="card-title">Gestión de Usuarios</h1>
+                <button class="btn btn-primary" onclick="abrirModalUsuario()">+ Nuevo Usuario</button>
+            </div>
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Estado</th><th>Acciones</th></tr>
+                    </thead>
+                    <tbody id="tabla-usuarios"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="seccion-rutas" style="display:none">
+            <div class="card-header">
+                <h1 class="card-title">Gestión de Rutas</h1>
+                <button class="btn btn-primary" onclick="abrirModalRuta()">+ Nueva Ruta</button>
+            </div>
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr><th>Origen</th><th>Destino</th><th>Duración</th><th>Distancia</th><th>Acciones</th></tr>
+                    </thead>
+                    <tbody id="tabla-rutas"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="seccion-servicios" style="display:none">
+            <div class="card-header">
+                <h1 class="card-title">Gestión de Servicios</h1>
+                <button class="btn btn-primary" onclick="abrirModalServicio()">+ Nuevo Servicio</button>
+            </div>
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr><th>Ruta</th><th>Fecha</th><th>Salida</th><th>Llegada</th><th>Precio</th><th>Capacidad</th><th>Acciones</th></tr>
+                    </thead>
+                    <tbody id="tabla-servicios"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="seccion-reservas" style="display:none">
+            <div class="card-header">
+                <h1 class="card-title">Todas las Reservas</h1>
+            </div>
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr><th>Código</th><th>Cliente</th><th>Origen → Destino</th><th>Fecha</th><th>Total</th><th>Estado</th><th>Acciones</th></tr>
+                    </thead>
+                    <tbody id="tabla-reservas-admin"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="seccion-destinos" style="display:none">
+            <div class="card-header">
+                <h1 class="card-title">Destinos</h1>
+                <button class="btn btn-primary" onclick="abrirModalDestino()">+ Nuevo Destino</button>
+            </div>
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr><th>Ciudad</th><th>País</th><th>Descripción</th><th>Estado</th><th>Acciones</th></tr>
+                    </thead>
+                    <tbody id="tabla-destinos"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Usuario -->
+    <div class="modal-overlay" id="modal-usuario">
+        <div class="modal">
+            <h2 style="margin-bottom:1.5rem">Nuevo Usuario</h2>
+            <div id="alertas-modal-usuario"></div>
+            <div class="grid-2">
+                <div class="form-group"><label class="form-label">Nombre</label><input type="text" class="form-control" id="u-nombre"></div>
+                <div class="form-group"><label class="form-label">Apellido</label><input type="text" class="form-control" id="u-apellido"></div>
+            </div>
+            <div class="form-group"><label class="form-label">Documento</label><input type="text" class="form-control" id="u-documento"></div>
+            <div class="form-group"><label class="form-label">Correo</label><input type="email" class="form-control" id="u-correo"></div>
+            <div class="form-group"><label class="form-label">Teléfono</label><input type="tel" class="form-control" id="u-telefono"></div>
+            <div class="form-group"><label class="form-label">Contraseña</label><input type="password" class="form-control" id="u-password"></div>
+            <div class="form-group">
+                <label class="form-label">Rol</label>
+                <select class="form-control" id="u-rol">
+                    <option value="1">Administrador</option>
+                    <option value="2">Empleado</option>
+                    <option value="3" selected>Cliente</option>
+                </select>
+            </div>
+            <div style="display:flex;gap:1rem;justify-content:flex-end;margin-top:1rem">
+                <button class="btn btn-outline" onclick="cerrarModal('modal-usuario')">Cancelar</button>
+                <button class="btn btn-primary" onclick="guardarUsuario()">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Destino -->
+    <div class="modal-overlay" id="modal-destino">
+        <div class="modal">
+            <h2 style="margin-bottom:1.5rem">Nuevo Destino</h2>
+            <div id="alertas-modal-destino"></div>
+            <div class="grid-2">
+                <div class="form-group"><label class="form-label">Ciudad</label><input type="text" class="form-control" id="d-ciudad"></div>
+                <div class="form-group"><label class="form-label">País</label><input type="text" class="form-control" id="d-pais"></div>
+            </div>
+            <div class="form-group"><label class="form-label">Descripción</label><textarea class="form-control" id="d-descripcion" rows="3"></textarea></div>
+            <div class="form-group"><label class="form-label">Imagen (nombre de archivo o URL)</label><input type="text" class="form-control" id="d-imagen"></div>
+            <div style="display:flex;gap:1rem;justify-content:flex-end;margin-top:1rem">
+                <button class="btn btn-outline" onclick="cerrarModal('modal-destino')">Cancelar</button>
+                <button class="btn btn-primary" onclick="guardarDestino()">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Ruta -->
+    <div class="modal-overlay" id="modal-ruta">
+        <div class="modal">
+            <h2 style="margin-bottom:1.5rem">Nueva Ruta</h2>
+            <div id="alertas-modal-ruta"></div>
+            <div class="grid-2">
+                <div class="form-group">
+                    <label class="form-label">Origen</label>
+                    <select class="form-control" id="r-origen"></select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Destino</label>
+                    <select class="form-control" id="r-destino"></select>
+                </div>
+            </div>
+            <div class="grid-2">
+                <div class="form-group"><label class="form-label">Duración (ej: 1h 30m)</label><input type="text" class="form-control" id="r-duracion"></div>
+                <div class="form-group"><label class="form-label">Distancia (ej: 650 km)</label><input type="text" class="form-control" id="r-distancia"></div>
+            </div>
+            <div style="display:flex;gap:1rem;justify-content:flex-end;margin-top:1rem">
+                <button class="btn btn-outline" onclick="cerrarModal('modal-ruta')">Cancelar</button>
+                <button class="btn btn-primary" onclick="guardarRuta()">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Servicio -->
+    <div class="modal-overlay" id="modal-servicio">
+        <div class="modal">
+            <h2 style="margin-bottom:1.5rem">Nuevo Servicio</h2>
+            <div id="alertas-modal-servicio"></div>
+            <div class="form-group">
+                <label class="form-label">Ruta</label>
+                <select class="form-control" id="s-ruta"></select>
+            </div>
+            <div class="grid-2">
+                <div class="form-group"><label class="form-label">Fecha</label><input type="date" class="form-control" id="s-fecha"></div>
+                <div class="form-group"><label class="form-label">Capacidad</label><input type="number" class="form-control" id="s-capacidad" min="4" value="20"></div>
+            </div>
+            <div class="grid-2">
+                <div class="form-group"><label class="form-label">Hora de salida</label><input type="time" class="form-control" id="s-hora-salida"></div>
+                <div class="form-group"><label class="form-label">Hora de llegada</label><input type="time" class="form-control" id="s-hora-llegada"></div>
+            </div>
+            <div class="form-group"><label class="form-label">Precio</label><input type="number" class="form-control" id="s-precio" min="0" step="1000"></div>
+            <div style="display:flex;gap:1rem;justify-content:flex-end;margin-top:1rem">
+                <button class="btn btn-outline" onclick="cerrarModal('modal-servicio')">Cancelar</button>
+                <button class="btn btn-primary" onclick="guardarServicio()">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Ver Reserva -->
+    <div class="modal-overlay" id="modal-reserva">
+        <div class="modal">
+            <h2 style="margin-bottom:1.5rem">Detalle de Reserva</h2>
+            <div id="detalle-reserva"></div>
+            <div style="display:flex;gap:1rem;justify-content:flex-end;margin-top:1rem">
+                <button class="btn btn-outline" onclick="cerrarModal('modal-reserva')">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>

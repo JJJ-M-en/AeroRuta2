@@ -1,0 +1,8 @@
+const generarCodigoReserva = () => {
+  const prefijo = 'AR';
+  const anio = new Date().getFullYear();
+  const random = Math.floor(100000 + Math.random() * 900000);
+  return `${prefijo}-${anio}-${random}`;
+};
+
+module.exports = { generarCodigoReserva };

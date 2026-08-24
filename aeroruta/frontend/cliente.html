@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Cuenta - AeroRuta</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="index.html" class="logo">AeroRuta</a>
+        <ul class="nav-links">
+            <li><a href="index.html">Inicio</a></li>
+            <li><a href="cliente.html">Mi Cuenta</a></li>
+            <li><a href="#" onclick="logout()">Cerrar Sesión</a></li>
+        </ul>
+    </nav>
+
+    <div class="container" style="margin-top:2rem">
+        <h1 style="color:white;margin-bottom:1.5rem">Mi Cuenta</h1>
+
+        <div class="grid-2">
+            <div class="card">
+                <h2 style="margin-bottom:1rem">Mi Perfil</h2>
+                <div id="perfil-info"></div>
+            </div>
+            <div class="card">
+                <h2 style="margin-bottom:1rem">Mis Reservas</h2>
+                <div id="mis-reservas"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        if(!token) location.href = 'login.html';
+
+        async function cargarPerfil() {
+            const user = JSON.parse(localStorage.getItem('usuario'));
+            document.getElementById('perfil-info').innerHTML = `
+                <p><strong>Nombre:</strong> ${user.nombre} ${user.apellido}</p>
+                <p><strong>Correo:</strong> ${user.correo}</p>
+            `;
+        }
+
+        async function cargarMisReservas() {
+            const res = await fetch(`${API_URL}/reservas/mis-reservas`, {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            const data = await res.json();
+            const cont = document.getElementById('mis-reservas');
+            if(!data.length) { cont.innerHTML = '<p>No tienes reservas aún.</p>'; return; }
+
+            cont.innerHTML = data.map(r => `
+                <div style="border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:0.75rem">
+                    <div style="display:flex;justify-content:space-between;align-items:center">
+                        <strong>${r.origen} → ${r.destino}</strong>
+                        <span class="badge badge-${r.estado === 'pagada' ? 'success' : r.estado === 'pendiente' ? 'warning' : 'danger'}">${r.estado}</span>
+                    </div>
+                    <p style="margin-top:0.5rem;color:var(--gray);font-size:0.9rem">
+                        ${r.fecha.split('T')[0]} | ${r.hora_salida} | Código: <strong>${r.codigo_reserva}</strong>
+                    </p>
+                    <p style="font-weight:700;color:var(--primary)">$${parseFloat(r.valor_total).toLocaleString()}</p>
+                </div>
+            `).join('');
+        }
+
+        function logout() { localStorage.clear(); location.href='index.html'; }
+        cargarPerfil(); cargarMisReservas();
+    </script>
+</body>
+</html>
